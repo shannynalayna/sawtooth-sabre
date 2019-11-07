@@ -67,7 +67,7 @@ impl<'a> TpProcessRequest<'a> {
     }
 }
 
-pub trait TransactionContext {
+pub trait TransactionContext<K, V> {
     #[deprecated(
         since = "0.2.0",
         note = "please use `get_state_entry` or `get_state_entries` instead"
@@ -80,7 +80,7 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `addresses` - the addresses to fetch
-    fn get_state(&self, addresses: &[String]) -> Result<Vec<(String, Vec<u8>)>, WasmSdkError> {
+    fn get_state(&self, addresses: &[K]) -> Result<Vec<(K, V)>, WasmSdkError> {
         self.get_state_entries(addresses)
     }
     /// get_state_entry queries the validator state for data at the
@@ -89,9 +89,9 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `address` - the address to fetch
-    fn get_state_entry(&self, address: &str) -> Result<Option<Vec<u8>>, WasmSdkError> {
+    fn get_state_entry(&self, address: K) -> Result<Option<V>, WasmSdkError> {
         Ok(self
-            .get_state_entries(&[address.to_string()])?
+            .get_state_entries(&[address])?
             .into_iter()
             .map(|(_, val)| val)
             .next())
@@ -104,10 +104,7 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `addresses` - the addresses to fetch
-    fn get_state_entries(
-        &self,
-        addresses: &[String],
-    ) -> Result<Vec<(String, Vec<u8>)>, WasmSdkError>;
+    fn get_state_entries(&self, addresses: &[K]) -> Result<Vec<(K, V)>, WasmSdkError>;
 
     #[deprecated(
         since = "0.2.0",
@@ -120,8 +117,8 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `entries` - entries are a hashmap where the key is an address and value is the data
-    fn set_state(&self, entries: HashMap<String, Vec<u8>>) -> Result<(), WasmSdkError> {
-        let state_entries: Vec<(String, Vec<u8>)> = entries.into_iter().collect();
+    fn set_state(&self, entries: HashMap<K, V>) -> Result<(), WasmSdkError> {
+        let state_entries: Vec<(K, V)> = entries.into_iter().collect();
         self.set_state_entries(state_entries)
     }
 
@@ -132,7 +129,7 @@ pub trait TransactionContext {
     ///
     /// * `address` - address of where to store the data
     /// * `data` - payload is the data to store at the address
-    fn set_state_entry(&self, address: String, data: Vec<u8>) -> Result<(), WasmSdkError> {
+    fn set_state_entry(&self, address: K, data: V) -> Result<(), WasmSdkError> {
         self.set_state_entries(vec![(address, data)])
     }
 
@@ -142,7 +139,7 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `entries` - entries are a hashmap where the key is an address and value is the data
-    fn set_state_entries(&self, entries: Vec<(String, Vec<u8>)>) -> Result<(), WasmSdkError>;
+    fn set_state_entries(&self, entries: Vec<(K, V)>) -> Result<(), WasmSdkError>;
 
     /// delete_state requests that each of the provided addresses be unset
     /// in validator state. A list of successfully deleted addresses is returned.
@@ -155,7 +152,7 @@ pub trait TransactionContext {
         since = "0.2.0",
         note = "please use `delete_state_entry` or `delete_state_entries` instead"
     )]
-    fn delete_state(&self, addresses: &[String]) -> Result<Vec<String>, WasmSdkError> {
+    fn delete_state(&self, addresses: &[K]) -> Result<Vec<K>, WasmSdkError> {
         self.delete_state_entries(addresses)
     }
 
@@ -166,11 +163,8 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `address` - the address to delete
-    fn delete_state_entry(&self, address: &str) -> Result<Option<String>, WasmSdkError> {
-        Ok(self
-            .delete_state_entries(&[address.to_string()])?
-            .into_iter()
-            .next())
+    fn delete_state_entry(&self, address: K) -> Result<Option<K>, WasmSdkError> {
+        Ok(self.delete_state_entries(&[address])?.into_iter().next())
     }
 
     /// delete_state_entries requests that each of the provided addresses be unset
@@ -180,7 +174,7 @@ pub trait TransactionContext {
     /// # Arguments
     ///
     /// * `addresses` - the addresses to delete
-    fn delete_state_entries(&self, addresses: &[String]) -> Result<Vec<String>, WasmSdkError>;
+    fn delete_state_entries(&self, addresses: &[K]) -> Result<Vec<K>, WasmSdkError>;
 }
 
 #[derive(Default)]
@@ -192,7 +186,7 @@ impl SabreTransactionContext {
     }
 }
 
-impl TransactionContext for SabreTransactionContext {
+impl TransactionContext<String, Vec<u8>> for SabreTransactionContext {
     fn get_state_entries(
         &self,
         addresses: &[String],
@@ -298,14 +292,14 @@ impl TransactionContext for SabreTransactionContext {
 }
 
 // Mimics the sawtooth sdk TransactionHandler
-pub trait TransactionHandler {
+pub trait TransactionHandler<K, V> {
     fn family_name(&self) -> String;
     fn family_versions(&self) -> Vec<String>;
     fn namespaces(&self) -> Vec<String>;
     fn apply(
         &self,
         request: &TpProcessRequest,
-        context: &mut dyn TransactionContext,
+        context: &mut dyn TransactionContext<K, V>,
     ) -> Result<(), ApplyError>;
 }
 
@@ -357,7 +351,10 @@ pub unsafe fn execute_entrypoint<F>(
     apply: F,
 ) -> i32
 where
-    F: Fn(&TpProcessRequest, &mut dyn TransactionContext) -> Result<bool, ApplyError>,
+    F: Fn(
+        &TpProcessRequest,
+        &mut dyn TransactionContext<String, Vec<u8>>,
+    ) -> Result<bool, ApplyError>,
 {
     let payload = if let Ok(i) = WasmBuffer::from_raw(payload_ptr) {
         i.to_bytes()
