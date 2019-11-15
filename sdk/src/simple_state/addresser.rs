@@ -98,3 +98,67 @@ impl Addresser<(String, String)> for DoubleKeyHashAddresser {
         keys.0.to_string() + "_" + &keys.1
     }
 }
+
+pub struct TripleKeyHashAddresser {
+    prefix: String,
+    first_hash_length: usize,
+    second_hash_length: usize,
+}
+
+impl TripleKeyHashAddresser {
+    pub fn new(
+        prefix: String,
+        first_hash_length: Option<usize>,
+        second_hash_length: Option<usize>,
+    ) -> TripleKeyHashAddresser {
+        let (first, second) =
+            calculate_hash_lengths(prefix.len(), first_hash_length, second_hash_length);
+        TripleKeyHashAddresser {
+            prefix,
+            first_hash_length: first,
+            second_hash_length: second,
+        }
+    }
+}
+
+impl Addresser<(String, String, String)> for TripleKeyHashAddresser {
+    fn compute(&self, keys: &(String, String, String)) -> Result<String, SimpleStateError> {
+        let hash_length = ADDRESS_LENGTH - self.prefix.len();
+        let last_hash_length = hash_length - (self.first_hash_length + self.second_hash_length);
+        if (self.prefix.len() + self.first_hash_length + self.second_hash_length + last_hash_length)
+            != ADDRESS_LENGTH
+        {
+            return Err(SimpleStateError::AddresserError(
+                "Incorrect hash length".to_string(),
+            ));
+        }
+
+        let first_hash = &hash(self.first_hash_length, &keys.0);
+        let second_hash = &hash(self.second_hash_length, &keys.1);
+        let third_hash = &hash(last_hash_length, &keys.2);
+
+        Ok(String::from(&self.prefix) + first_hash + second_hash + third_hash)
+    }
+
+    fn normalize(&self, keys: &(String, String, String)) -> String {
+        keys.0.to_string() + "_" + &keys.1 + "_" + &keys.2
+    }
+}
+
+// Used to calculate the lengths of the key hashes to be used to create an address by the
+// TripleKeyHashAddresser.
+fn calculate_hash_lengths(
+    prefix_length: usize,
+    first_length: Option<usize>,
+    second_length: Option<usize>,
+) -> (usize, usize) {
+    match (first_length, second_length) {
+        (Some(first), Some(second)) => (first, second),
+        (None, Some(second)) => (((ADDRESS_LENGTH - prefix_length - second) / 2), second),
+        (Some(first), None) => (first, ((ADDRESS_LENGTH - prefix_length - first) / 2)),
+        (None, None) => (
+            ((ADDRESS_LENGTH - prefix_length) / 3),
+            ((ADDRESS_LENGTH - prefix_length) / 3),
+        ),
+    }
+}
