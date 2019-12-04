@@ -15,6 +15,7 @@
 pub mod addresser;
 pub mod context;
 pub mod error;
+pub mod handler;
 
 #[cfg(test)]
 mod tests {
