@@ -16,7 +16,7 @@ use std::hash::Hash;
 
 use crate::simple_state::addresser::Addresser;
 use crate::simple_state::context::KeyValueTransactionContext;
-use crate::{ApplyError, TpProcessRequest};
+use crate::{ApplyError, TpProcessRequest, TransactionContext, TransactionHandler};
 
 pub trait SimpleTransactionHandler<'b> {
     type Key: Eq + Hash;
@@ -35,4 +35,31 @@ pub trait SimpleTransactionHandler<'b> {
         _request: &TpProcessRequest,
         _context: KeyValueTransactionContext<'_, Self::Addr, Self::Key>,
     ) -> Result<(), ApplyError>;
+}
+
+impl<'a, T> TransactionHandler for T
+where
+    T: SimpleTransactionHandler<'a>,
+{
+    fn family_name(&self) -> String {
+        self.get_family_name()
+    }
+
+    fn family_versions(&self) -> Vec<String> {
+        self.get_family_versions()
+    }
+
+    fn namespaces(&self) -> Vec<String> {
+        self.get_namespaces()
+    }
+
+    fn apply(
+        &self,
+        request: &TpProcessRequest,
+        context: &mut dyn TransactionContext,
+    ) -> Result<(), ApplyError> {
+        let simple_context: KeyValueTransactionContext<'_, T::Addr, T::Key> =
+            KeyValueTransactionContext::new(context, self.take_addresser());
+        self.apply(request, simple_context)
+    }
 }
