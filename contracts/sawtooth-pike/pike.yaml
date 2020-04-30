@@ -13,7 +13,7 @@
 # limitations under the License.
 
 name: pike
-version: '1.0'
+version: '1.0.0'
 wasm: tp/target/wasm32-unknown-unknown/release/pike.wasm
 inputs:
   - 'cad11d'

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: intkey_multiply
-version: '1.0'
+name: intkey-multiply
+version: '1.0.0'
 inputs:
   - '00ec03'
   - '1cf126'

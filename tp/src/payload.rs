@@ -11,9 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 use sabre_sdk::protocol::payload::{Action, SabrePayload};
 use sabre_sdk::protos::FromBytes;
 use sawtooth_sdk::processor::handler::ApplyError;
+use semver::Version;
 
 pub struct SabreRequestPayload {
     action: Action,
@@ -38,11 +40,23 @@ impl SabreRequestPayload {
                         "Contract name cannot be an empty string",
                     )));
                 }
+                if create_contract.name().contains('_') {
+                    return Err(ApplyError::InvalidTransaction(format!(
+                        "Contract name cannot contain '_': {}",
+                        create_contract.name(),
+                    )));
+                }
                 if create_contract.version().is_empty() {
                     return Err(ApplyError::InvalidTransaction(String::from(
                         "Contract version cannot be an empty string",
                     )));
                 }
+                if Version::parse(create_contract.version()).is_err() {
+                    return Err(ApplyError::InvalidTransaction(format!(
+                        "Contract version is invalid semver string: {}",
+                        create_contract.version()
+                    )));
+                };
                 if create_contract.inputs().is_empty() {
                     return Err(ApplyError::InvalidTransaction(String::from(
                         "Contract inputs cannot be an empty",

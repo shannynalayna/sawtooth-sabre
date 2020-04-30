@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: incdec 
-version: '1.0'
+name: incdec
+version: '1.0.0'
 wasm: build/optimized.wasm
 inputs:
   - '12cd3c'

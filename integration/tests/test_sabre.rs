@@ -157,14 +157,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply B and C together and set in A.
     //
     // Result: Invalid Transaction, Contract does not exist
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &GOOD_PAYLOAD
             + " --inputs 1cf126 --outputs 1cf126",
     ) {
@@ -180,7 +180,7 @@ fn test_sabre() {
     //
     // Send CreateContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      contract: The compiled intkey_multiply wasm contract.
@@ -202,7 +202,7 @@ fn test_sabre() {
     //      Owners: signing key
     //
     // Result: Committed.
-    let response = match sabre_cli("cr --create intkey_multiply --owner ".to_string() + &signer) {
+    let response = match sabre_cli("cr --create intkey-multiply --owner ".to_string() + &signer) {
         Ok(x) => x,
         Err(err) => panic!(format!("No Response {}", err)),
     };
@@ -212,7 +212,7 @@ fn test_sabre() {
     //
     // Send CreateContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Contract: The compiled intkey_multiply wasm contract.
@@ -229,14 +229,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply B and C together and set in A.
     //
     // Result: Invalid Transaction, Namespace Registry does not exist
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &GOOD_PAYLOAD
             + " --inputs 1cf126 --outputs 1cf126",
     ) {
@@ -279,14 +279,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply B and C together and set in A.
     //
     // Result: Invalid Transaction, Contract does not have permission
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &GOOD_PAYLOAD
             + " --inputs 1cf126 --outputs 1cf126",
     ) {
@@ -308,7 +308,7 @@ fn test_sabre() {
     //      Write: true
     //
     // Result: Committed
-    let response = match sabre_cli("perm 1cf126 intkey_multiply --read --write".to_string()) {
+    let response = match sabre_cli("perm 1cf126 intkey-multiply --read --write".to_string()) {
         Ok(x) => x,
         Err(err) => panic!(format!("No Response {}", err)),
     };
@@ -324,7 +324,7 @@ fn test_sabre() {
     //      Write: true
     //
     // Result: Committed
-    let response = match sabre_cli("perm cad11d intkey_multiply --read --write".to_string()) {
+    let response = match sabre_cli("perm cad11d intkey-multiply --read --write".to_string()) {
         Ok(x) => x,
         Err(err) => panic!(format!("No Response {}", err)),
     };
@@ -340,14 +340,14 @@ fn test_sabre() {
     //      Write: true
     //
     // Result: Committed
-    let response = match sabre_cli("perm 00ec03 intkey_multiply --read --write".to_string()) {
+    let response = match sabre_cli("perm 00ec03 intkey-multiply --read --write".to_string()) {
         Ok(x) => x,
         Err(err) => panic!(format!("No Response {}", err)),
     };
     assert!(response["data"][0]["status"] == "COMMITTED");
 
     let response = match sabre_cli(format!(
-        "exec --contract pike:1.0 --payload {} --inputs cad11d --outputs cad11d",
+        "exec --contract pike:1.0.0 --payload {} --inputs cad11d --outputs cad11d",
         CREATE_ORG_PAYLOAD
     )) {
         Ok(x) => x,
@@ -375,14 +375,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply B and C together and set in A.
     //
     // Result: Committed. Set Inktey State.
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &GOOD_PAYLOAD
             + " --inputs 1cf126 cad11d 00ec03 --outputs 1cf126",
     ) {
@@ -396,14 +396,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply B and C together and set in A.
     //
     // Result: Invalid Transaction, Wasm contract returned invalid transaction
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &GOOD_PAYLOAD
             + " --inputs 1cf126 cad11d 00ec03 --outputs 1cf126",
     ) {
@@ -420,14 +420,14 @@ fn test_sabre() {
     //
     // Send ExecuteContractAction with the following:
     //      Name: intkey_multiply
-    //      Version: 1.0
+    //      Version: 1.0.0
     //      Inputs: 1cf126
     //      Outputs: 1cf126
     //      Payload: A payload that tries to multiply Bad and C together and set in A.
     //
     // Result: Invalid Transaction, Wasm contract returned invalid transaction
     let response = match sabre_cli(
-        "exec --contract intkey_multiply:1.0 --payload ".to_string()
+        "exec --contract intkey-multiply:1.0.0 --payload ".to_string()
             + &BAD_PAYLOAD
             + " --inputs 1cf126 cad11d 00ec03 --outputs 1cf126",
     ) {
